@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather Widget</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-theme="dark" data-size="medium">
+    <div class="widget" id="widget">
+      <div class="drag-region">
+        <div class="header">
+          <span class="title">Hava Durumu</span>
+          <div class="header-actions">
+            <button class="icon-btn" id="refreshBtn" title="Hava durumunu yenile">⟳</button>
+            <button class="icon-btn" id="compactBtn" title="Kompakt görünüm — sadece sıcaklık ve ikon">▭</button>
+            <button class="icon-btn" id="settingsBtn" title="Ayarlar">⚙</button>
+            <button class="icon-btn close-btn" id="closeBtn" title="Kapat">×</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="city-tabs" id="cityTabs"></div>
+
+      <div class="content" id="mainContent">
+        <div class="icon-wrap">
+          <div class="weather-icon-3d icon-lg" id="weatherIcon" aria-hidden="true"></div>
+        </div>
+        <div class="details">
+          <div class="location" id="location">Yükleniyor...</div>
+          <div class="temperature" id="temperature">--°</div>
+          <div class="feels-like" id="feelsLike"></div>
+          <div class="condition" id="condition">Güncelleniyor</div>
+        </div>
+      </div>
+
+      <div class="details-grid expandable" id="detailsGrid">
+        <span id="uvMeta">UV --</span>
+        <span id="pressureMeta">Basınç -- hPa</span>
+        <span id="visibilityMeta">Görüş -- km</span>
+        <span id="aqiMeta">AQI --</span>
+        <span id="sunMeta">☀ -- · 🌙 --</span>
+      </div>
+
+      <div class="section expandable">
+        <div class="section-title">Saatlik</div>
+        <div class="hourly-row" id="hourlyRow"></div>
+      </div>
+
+      <div class="section expandable">
+        <div class="section-title">15 Günlük</div>
+        <div class="daily-row" id="dailyRow"></div>
+        <div class="day-detail hidden" id="dayDetailPanel">
+          <div class="day-detail-header">
+            <span id="dayDetailTitle">Gün detayı</span>
+            <button class="icon-btn" id="closeDayDetailBtn" title="Kapat">×</button>
+          </div>
+          <div class="day-detail-body" id="dayDetailBody"></div>
+        </div>
+      </div>
+
+      <div class="footer expandable">
+        <span id="meta">Nem --% · Rüzgar -- km/s</span>
+        <span id="updatedAt">--</span>
+      </div>
+
+      <div class="cache-badge hidden" id="cacheBadge">Çevrimdışı önbellek</div>
+      <div class="error hidden" id="error"></div>
+
+      <div class="settings-panel hidden" id="settingsPanel">
+        <div class="settings-header">
+          <span>Ayarlar</span>
+          <button class="icon-btn" id="closeSettingsBtn" title="Kapat">×</button>
+        </div>
+
+        <div class="settings-scroll">
+          <label class="field-label" for="citySearch">Şehir ara</label>
+          <input
+            class="field-input"
+            id="citySearch"
+            type="text"
+            placeholder="Örn. Ankara, Izmir..."
+            autocomplete="off"
+          />
+          <div class="city-results" id="cityResults"></div>
+          <button class="secondary-btn" id="addCityBtn">Kayıtlı şehirlere ekle (en fazla 10)</button>
+          <div class="saved-cities" id="savedCities"></div>
+
+          <label class="toggle-row">
+            <input type="checkbox" id="autoLocationToggle" />
+            <span>Konumumu otomatik kullan</span>
+          </label>
+
+          <label class="field-label" for="themeSelect">Tema</label>
+          <select class="field-input" id="themeSelect">
+            <option value="dark">Koyu</option>
+            <option value="light">Açık</option>
+            <option value="auto">Sistem ile uyumlu</option>
+          </select>
+
+          <label class="field-label" for="sizeSelect">Boyut (tam görünüm)</label>
+          <select class="field-input" id="sizeSelect">
+            <option value="small">Küçük</option>
+            <option value="medium">Orta</option>
+            <option value="large">Büyük</option>
+          </select>
+
+          <label class="field-label" for="opacityRange">Opaklık (%<span id="opacityValue">92</span>)</label>
+          <input class="range-input" id="opacityRange" type="range" min="70" max="100" value="92" />
+
+          <label class="toggle-row">
+            <input type="checkbox" id="autoStartToggle" />
+            <span>Windows ile birlikte başlat</span>
+          </label>
+
+          <label class="toggle-row">
+            <input type="checkbox" id="closeToTrayToggle" />
+            <span>Kapatınca tepsiye küçült</span>
+          </label>
+
+          <label class="toggle-row">
+            <input type="checkbox" id="alwaysOnTopToggle" />
+            <span>Her zaman üstte tut</span>
+          </label>
+
+          <label class="toggle-row">
+            <input type="checkbox" id="batteryFriendlyToggle" />
+            <span>Pil dostu mod (15 dk güncelleme)</span>
+          </label>
+
+          <div class="settings-subtitle">Bildirimler</div>
+
+          <label class="toggle-row">
+            <input type="checkbox" id="notificationsToggle" />
+            <span>Bildirimleri aç</span>
+          </label>
+          <label class="toggle-row">
+            <input type="checkbox" id="rainAlertToggle" />
+            <span>Yağmur uyarısı</span>
+          </label>
+          <label class="toggle-row">
+            <input type="checkbox" id="stormAlertToggle" />
+            <span>Fırtına uyarısı</span>
+          </label>
+          <label class="toggle-row">
+            <input type="checkbox" id="extremeTempToggle" />
+            <span>Aşırı sıcak/soğuk uyarısı</span>
+          </label>
+          <label class="toggle-row">
+            <input type="checkbox" id="umbrellaAlertToggle" />
+            <span>Şemsiye hatırlatıcısı (30 dk)</span>
+          </label>
+          <div class="settings-hint">Kayıtlı tüm şehirler ve Otomatik konum ayrı ayrı izlenir.</div>
+
+          <button class="secondary-btn" id="testNotificationBtn">Test bildirimi gönder</button>
+          <div class="test-result hidden" id="testNotificationResult"></div>
+
+          <div class="settings-subtitle">Güncelleme</div>
+          <div class="update-row">
+            <span class="update-version" id="updateVersionLabel">Sürüm --</span>
+            <button class="secondary-btn update-check-btn" id="checkUpdateBtn">Güncellemeleri kontrol et</button>
+          </div>
+          <div class="update-status hidden" id="updateStatus"></div>
+          <button class="primary-btn update-install-btn hidden" id="installUpdateBtn">Şimdi yeniden başlat ve kur</button>
+
+          <div class="shortcut-hint">Kısayol: Ctrl+Shift+W ile göster/gizle</div>
+        </div>
+
+        <button class="primary-btn" id="saveSettingsBtn">Kaydet</button>
+      </div>
+    </div>
+
+    <script src="weather.js"></script>
+    <script src="weather-icons.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
