@@ -18,6 +18,105 @@ const pressureMetaEl = document.getElementById("pressureMeta");
 const visibilityMetaEl = document.getElementById("visibilityMeta");
 const aqiMetaEl = document.getElementById("aqiMeta");
 const sunMetaEl = document.getElementById("sunMeta");
+const weatherTipEl = document.getElementById("weatherTip");
+
+const TEMP_COLOR_CLASSES = [
+  "temp-cold",
+  "temp-cool",
+  "temp-mild",
+  "temp-warm",
+  "temp-hot",
+  "temp-extreme",
+];
+
+function getTempColorClass(temperature) {
+  if (typeof temperature !== "number" || isNaN(temperature)) return null;
+  if (temperature < 0) return "temp-cold";
+  if (temperature < 10) return "temp-cool";
+  if (temperature < 20) return "temp-mild";
+  if (temperature < 28) return "temp-warm";
+  if (temperature < 35) return "temp-hot";
+  return "temp-extreme";
+}
+
+// Yağmurlu hava kodları (weatherService.js'deki RAIN_CODES ile aynı).
+const RAIN_CODES_RENDERER = new Set([51, 53, 55, 61, 63, 65, 80, 81, 82]);
+
+function buildWeatherTip(data) {
+  const t = data.temperature;
+  const feels = typeof data.feelsLike === "number" ? data.feelsLike : t;
+  const uv = data.uvIndex || 0;
+  const humidity = data.humidity || 0;
+  const windSpeed = data.windSpeed || 0;
+
+  // Önümüzdeki saatte yağmur olasılığı
+  const nextHour = (data.hourly || [])[0];
+  const rainSoon =
+    nextHour &&
+    (nextHour.precipProbability >= 50 ||
+      (RAIN_CODES_RENDERER.has(nextHour.weatherCode) &&
+        nextHour.precipProbability >= 30));
+
+  // Öncelik sırası: en kritik durum kazanır.
+  if (t >= 35 || feels >= 38) {
+    return { text: "🔥 Aşırı sıcak — gölgede kal, bol su iç", type: "extreme" };
+  }
+  if (t <= -5) {
+    return { text: "🥶 Aşırı soğuk — sıcak giyin", type: "extreme" };
+  }
+  if (rainSoon) {
+    return {
+      text: `☂️ 1 saat içinde yağmur olasılığı %${Math.round(nextHour.precipProbability)}`,
+      type: "warning",
+    };
+  }
+  if (t >= 28 && humidity >= 65) {
+    return { text: "💧 Bunaltıcı — su tüketimini artır", type: "warning" };
+  }
+  if (uv >= 6 && t >= 20) {
+    return { text: "☀️ Yüksek UV — güneş kremi sür", type: "warning" };
+  }
+  if (windSpeed >= 35) {
+    return { text: `💨 Sert rüzgar (${Math.round(windSpeed)} km/s)`, type: "warning" };
+  }
+  if (t <= 0) {
+    return { text: "❄️ Buzlanma riski — dikkatli ol", type: "info" };
+  }
+  if (t >= 18 && t <= 24 && uv < 5 && humidity < 70) {
+    return { text: "✨ Hava harika", type: "good" };
+  }
+  return null;
+}
+
+function applyTemperatureStyling(data) {
+  const colorClass = getTempColorClass(data.temperature);
+  TEMP_COLOR_CLASSES.forEach((cls) => temperatureEl.classList.remove(cls));
+  if (colorClass) temperatureEl.classList.add(colorClass);
+
+  // Aşırı sıcak veya hissedilen aşırı sıcakta nabız efekti.
+  const shouldGlow =
+    data.temperature >= 35 ||
+    (typeof data.feelsLike === "number" && data.feelsLike >= 38);
+  temperatureEl.classList.toggle("glowing", shouldGlow);
+}
+
+function applyWeatherTip(data) {
+  const tip = buildWeatherTip(data);
+  if (!tip) {
+    weatherTipEl.classList.add("hidden");
+    weatherTipEl.textContent = "";
+    return;
+  }
+  weatherTipEl.textContent = tip.text;
+  weatherTipEl.classList.remove(
+    "hidden",
+    "tip-extreme",
+    "tip-warning",
+    "tip-info",
+    "tip-good"
+  );
+  weatherTipEl.classList.add(`tip-${tip.type}`);
+}
 
 const closeBtn = document.getElementById("closeBtn");
 const compactBtn = document.getElementById("compactBtn");
@@ -196,6 +295,10 @@ function showCityLoadingState(cityName) {
   temperatureEl.textContent = "--°";
   feelsLikeEl.textContent = "";
   conditionEl.textContent = "Yükleniyor...";
+  TEMP_COLOR_CLASSES.forEach((cls) => temperatureEl.classList.remove(cls));
+  temperatureEl.classList.remove("glowing");
+  weatherTipEl.classList.add("hidden");
+  weatherTipEl.textContent = "";
   metaEl.textContent = "";
   uvMetaEl.textContent = "UV --";
   pressureMetaEl.textContent = "-- hPa";
@@ -272,6 +375,9 @@ function renderWeather(data) {
       : "";
   conditionEl.textContent = info.label;
   weatherIconEl.innerHTML = getWeatherIconSvg(data.weatherCode, "main");
+
+  applyTemperatureStyling(data);
+  applyWeatherTip(data);
 
   metaEl.textContent = `Nem ${Math.round(data.humidity)}% · Rüzgar ${Math.round(data.windSpeed)} km/s`;
   updatedAtEl.textContent = data.cached
