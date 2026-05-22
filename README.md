@@ -8,6 +8,17 @@ Windows için modern, hafif ve şık bir masaüstü hava durumu widget'ı.
 
 İstanbul'daki hava 19°C mi? Ankara 4 saat içinde yağacak mı? Antalya'da UV 8 mi? Hepsini ekranının sağ köşesinde, tek bakışta gör.
 
+<p align="center">
+  <img src="screenshots/01-main.png" width="260" alt="Tam görünüm" />
+  <img src="screenshots/02-day-detail.png" width="260" alt="Gün detayı paneli" />
+  <img src="screenshots/03-settings.png" width="260" alt="Ayarlar paneli" />
+  <img src="screenshots/04-settings-update.png" width="260" alt="Otomatik güncelleme" />
+</p>
+
+<p align="center">
+  <sub>Tam görünüm · Gün detayı · Çoklu şehir ayarları · Otomatik güncelleme</sub>
+</p>
+
 ---
 
 ## Özellikler
