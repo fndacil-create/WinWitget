@@ -42,7 +42,8 @@
     "publish": {
       "provider": "github",
       "owner": "fndacil-create",
-      "repo": "WinWitget"
+      "repo": "WinWitget",
+      "releaseType": "release"
     }
   },
   "devDependencies": {
